@@ -1,5 +1,4 @@
-#ifndef __lib_graph
-#define __lib_graph
+#pragma once
+
 #include <unweight.hpp>
 #include <weight.hpp>
-#endif

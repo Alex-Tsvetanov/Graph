@@ -8,19 +8,17 @@ using namespace graph;
 int main ()
 {
 	{
-		weight <int>::ln test1;
+		weight <int>::matrix test1 (4);
 		test1.add (1, 3, 4);
 		test1.add2 (0, 3, 4);
-		cout << test1 [0].size () << " ";
-		cout << test1 [1].size () << " ";
-		cout << test1 [2].size () << " ";
-		cout << test1 [3].size () << "\n";
+		cout << test1.data [0][3] << " ";
+		cout << test1.data [1][3] << " ";
+		cout << test1.data [2][0] << " ";
 
-		unweight::ln test2 = test1.to_unweight ();
-		cout << test2 [0].size () << " ";
-		cout << test2 [1].size () << " ";
-		cout << test2 [2].size () << " ";
-		cout << test2 [3].size () << "\n";
+		unweight::matrix test2 = test1.to_unweight ();
+		cout << test2.data [0][3] << " ";
+		cout << test2.data [1][3] << " ";
+		cout << test2.data [2][0] << " ";
 	}
 	{
 		weight <int>::le test1;

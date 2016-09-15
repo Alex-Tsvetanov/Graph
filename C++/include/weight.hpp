@@ -1,15 +1,14 @@
-#ifndef __lib_graph
-#define __lib_graph
+#pragma once
+
 #include <abstract.hpp>
 #include <vector>
 #include <unweight.hpp>
 
 namespace graph
 {
-	template <typename T>
-	class weight
+	namespace weight
 	{
-	private:
+	template <typename T>
 		class ln_edge 
 		{
 		public:
@@ -20,6 +19,7 @@ namespace graph
 			}
 		};
 		
+	template <typename T>
 		class le_edge
 		{
 		public:
@@ -30,10 +30,12 @@ namespace graph
 			{
 			}
 		};
-	public:
-		class ln : public abstract2 < ln_edge, std::vector < std::vector < ln_edge > >, T>
+	template <typename T>
+		class ln : public graph::abstract::graph_weight_abstract < ln_edge<T>, std::vector < std::vector < ln_edge<T> > >, T>
 		{
 		public:
+			std::vector < std::vector < ln_edge > > l;
+
 			void add (const std::size_t a, const std::size_t b, const T c)
 			{
 				std::size_t m = (a < b)?b:a;
@@ -52,9 +54,11 @@ namespace graph
 			}
 		};
 		
-		class le : public abstract2 < le_edge, std::vector < le_edge >, T>
+	template <typename T>
+		class le : public graph::abstract::graph_weight_abstract < le_edge<T>, std::vector < le_edge<T> >, T>
 		{
 		public:
+			std::vector < le_edge > l;
 			void add (const std::size_t a, const std::size_t b, const T c)
 			{
 				l.push_back (le_edge (a, b, c));
@@ -68,7 +72,94 @@ namespace graph
 				return std::move (a);
 			}
 		};
+		
+	template <typename T>
+		class matrix
+		{
+		public:
+			using value_type = T;
+			size_t cols;
+			size_t rows;
+			
+			value_type** data;
+			matrix ()
+			{
+				cols = 0;
+				rows = 0;
+				data = nullptr;
+			}
+			matrix (const size_t n)
+			{
+				rows = cols = n;
+				data = new value_type* [cols];
+				for (size_t i = 0 ; i < cols ; i ++)
+					data [i] = new value_type [rows];
+			}
+
+			value_type* operator[] (size_t i)
+			{
+				if (i >= cols)
+					throw std::out_of_range ("matrix <T>::operator[]: Index out-of-range");
+				return data [i];
+			}
+			const value_type* operator[] (size_t i) const
+			{
+				if (i >= cols)
+					throw std::out_of_range ("matrix <T>::operator[]: Index out-of-range");
+				return data [i];
+			}
+		
+			void add (const std::size_t a, const std::size_t b, const T c)
+			{
+				data [a][b] = c;
+			}
+			
+			void add2 (const std::size_t a, const std::size_t b, const T c)
+			{
+				add (a, b, c);
+				add (b, a, c);
+			}	
+
+			graph::unweight::matrix to_unweight () const
+			{
+				auto a = graph::unweight::matrix (cols);
+				for (std::size_t i = 0 ; i < rows ; i ++)
+					for (std::size_t j = 0 ; j < rows ; j ++)
+						if (data [i][j] != T ())
+							a.add (i, j);
+				return std::move (a);
+			}
+
+			graph::weight<T>::matrix operator+ (const graph::weight::matrix<T> &b)
+			{
+				if (cols != b.cols or rows != b.rows)
+					throw "weight::matrix::operator+ : Not compatible";
+				graph::weight<T>::matrix res (cols, rows);
+				for (size_t i = 0 ; i < cols ; i ++)
+					for (size_t j = 0 ; j < rows ; j ++)
+					{
+						res [i][j] = this -> operator[] (i)[j] + b [i][j];
+					}
+				return std::move (res);
+			}
+
+			graph::weight::matrix<T> operator* (const graph::weight::matrix<T> &b)
+			{
+				if (cols != b.rows)
+					throw "weight::matrix::operator* : Not compatible";
+					
+				graph::weight::matrix<T> res (b.cols, rows);
+				for (size_t j = 0 ; j < b.cols ; j ++)
+				{
+					for(size_t i = 0 ; i < cols ; i ++) 
+					{
+						res [j][i] = 0;
+						for(size_t k = 1 ; k < rows ; k ++) 
+							res [j][i] += this->operator[](j)[k] * b [k][i];
+					}
+				}
+				return std::move (res);
+			}
+		};
 	};
 }
-
-#endif
